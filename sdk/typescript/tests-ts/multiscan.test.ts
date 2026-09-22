@@ -789,9 +789,7 @@ describe("multiscan", () => {
     expect(invalid.text()).toContain("expected number to be >0");
   });
 
-  test(
-    "includes warned repositories in the bulk CLI campaign summary without changing success status",
-    async () => {
+  test("includes warned repositories in the bulk CLI campaign summary without changing success status", async () => {
       const paths = await fixture();
       const source = await repository(paths.root, "cli-warning");
       await writeFile(
@@ -830,8 +828,7 @@ describe("multiscan", () => {
         failed: 0,
         warned: 1,
       });
-    },
-  );
+  });
 
   test("surfaces optional post-scan warnings without failing completed scans", async () => {
     const paths = await fixture();
