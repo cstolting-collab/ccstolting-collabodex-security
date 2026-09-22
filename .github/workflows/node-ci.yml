@@ -2,7 +2,7 @@ name: node-ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, debug/prettier-multiscan]
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
@@ -193,7 +193,10 @@ jobs:
       - name: Typecheck
         run: pnpm --dir sdk/typescript run types
       - name: Check formatting
-        run: pnpm --dir sdk/typescript run format
+        run: |
+          pnpm --dir sdk/typescript exec prettier --write tests-ts/multiscan.test.ts
+          git diff -- sdk/typescript/tests-ts/multiscan.test.ts
+          exit 1
       - name: Check MCP formatting
         run: pnpm --dir plugins/codex-security/mcp-app exec prettier --check "**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}"
 
