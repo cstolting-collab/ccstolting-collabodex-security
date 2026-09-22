@@ -790,44 +790,38 @@ describe("multiscan", () => {
   });
 
   test("includes warned repositories in the bulk CLI campaign summary without changing success status", async () => {
-      const paths = await fixture();
-      const source = await repository(paths.root, "cli-warning");
-      await writeFile(
-        paths.input,
-        `id,repository,revision\ncli-warning,${source.path},${source.revision}\n`,
-      );
-      const stdout = capture();
-      const stderr = capture();
+    const paths = await fixture();
+    const source = await repository(paths.root, "cli-warning");
+    await writeFile(
+      paths.input,
+      `id,repository,revision\ncli-warning,${source.path},${source.revision}\n`,
+    );
+    const stdout = capture();
+    const stderr = capture();
 
-      expect(
-        await main(
-          [
-            "bulk-scan",
-            "repositories.csv",
-            "--output-dir",
-            "results",
-            "--json",
-          ],
-          stdout.stream,
-          stderr.stream,
-          dependencies({
-            currentDirectory: paths.root,
-            onTurn: (_repository, options) => {
-              const warningOptions = options as {
-                onWarning?: (warning: string) => void;
-              };
-              warningOptions.onWarning?.("Repository changed during the scan.");
-            },
-          }),
-        ),
-      ).toBe(0);
+    expect(
+      await main(
+        ["bulk-scan", "repositories.csv", "--output-dir", "results", "--json"],
+        stdout.stream,
+        stderr.stream,
+        dependencies({
+          currentDirectory: paths.root,
+          onTurn: (_repository, options) => {
+            const warningOptions = options as {
+              onWarning?: (warning: string) => void;
+            };
+            warningOptions.onWarning?.("Repository changed during the scan.");
+          },
+        }),
+      ),
+    ).toBe(0);
 
-      expect(JSON.parse(stdout.text())).toMatchObject({
-        completed: 1,
-        incomplete: 0,
-        failed: 0,
-        warned: 1,
-      });
+    expect(JSON.parse(stdout.text())).toMatchObject({
+      completed: 1,
+      incomplete: 0,
+      failed: 0,
+      warned: 1,
+    });
   });
 
   test("surfaces optional post-scan warnings without failing completed scans", async () => {
