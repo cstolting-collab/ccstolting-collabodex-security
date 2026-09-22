@@ -111,6 +111,7 @@ export interface MultiscanResult {
   incomplete: number;
   failed: number;
   skipped: number;
+  warned: number;
   resultsPath: string;
   policyFailed?: boolean;
 }
@@ -222,6 +223,7 @@ async function runCampaign(
   const pending: MultiscanTask[] = [];
   let completed = 0;
   let incomplete = 0;
+  let warned = 0;
   let policyFailed = false;
   const hasPolicy = Object.values(options.scanOptionsByMode ?? {}).some(
     (settings) => settings.failureSeverity !== undefined,
@@ -261,7 +263,9 @@ async function runCampaign(
       (await hasArtifacts(artifactOutput))
     ) {
       if (receipt.status !== "failed") {
-        for (const warning of receipt.warnings ?? []) {
+        const warnings = receipt.warnings ?? [];
+        if (warnings.length > 0) warned += 1;
+        for (const warning of warnings) {
           notifyProgress(options, {
             repository: task.id,
             status: receipt.status,
@@ -306,6 +310,7 @@ async function runCampaign(
       incomplete,
       failed: 0,
       skipped,
+      warned,
       resultsPath: ledger,
       ...(hasPolicy ? { policyFailed } : {}),
     };
@@ -517,6 +522,7 @@ async function runCampaign(
         });
         if (failure === undefined) {
           policyFailed ||= attemptPolicyFailed === true;
+          if (runWarnings.length > 0) warned += 1;
           if (warning === undefined) completed += 1;
           else incomplete += 1;
           break;
@@ -550,6 +556,7 @@ async function runCampaign(
     incomplete,
     failed,
     skipped,
+    warned,
     resultsPath: ledger,
     ...(hasPolicy ? { policyFailed } : {}),
   };
