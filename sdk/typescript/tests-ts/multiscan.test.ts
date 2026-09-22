@@ -700,12 +700,7 @@ describe("multiscan", () => {
       ),
     );
 
-    expect(summary).toMatchObject({
-      completed: 1,
-      incomplete: 0,
-      failed: 0,
-      warned: 1,
-    });
+    expect(summary).toMatchObject({ completed: 1, incomplete: 0, failed: 0 });
     expect(await results(summary.resultsPath)).toMatchObject([
       { id: "priced", status: "completed", coverage: "complete", cost },
     ]);
@@ -794,7 +789,9 @@ describe("multiscan", () => {
     expect(invalid.text()).toContain("expected number to be >0");
   });
 
-  test("includes warned repositories in the bulk CLI campaign summary without changing success status", async () => {
+  test(
+    "includes warned repositories in the bulk CLI campaign summary without changing success status",
+    async () => {
     const paths = await fixture();
     const source = await repository(paths.root, "cli-warning");
     await writeFile(
@@ -827,13 +824,14 @@ describe("multiscan", () => {
       ),
     ).toBe(0);
 
-    expect(JSON.parse(stdout.text())).toMatchObject({
-      completed: 1,
-      incomplete: 0,
-      failed: 0,
-      warned: 1,
-    });
-  });
+      expect(JSON.parse(stdout.text())).toMatchObject({
+        completed: 1,
+        incomplete: 0,
+        failed: 0,
+        warned: 1,
+      });
+    },
+  );
 
   test("surfaces optional post-scan warnings without failing completed scans", async () => {
     const paths = await fixture();
@@ -858,7 +856,12 @@ describe("multiscan", () => {
       ),
     );
 
-    expect(summary).toMatchObject({ completed: 1, incomplete: 0, failed: 0 });
+    expect(summary).toMatchObject({
+      completed: 1,
+      incomplete: 0,
+      failed: 0,
+      warned: 1,
+    });
     expect(progress).toContainEqual({
       repository: "follow-up-warning",
       attempt: 1,
