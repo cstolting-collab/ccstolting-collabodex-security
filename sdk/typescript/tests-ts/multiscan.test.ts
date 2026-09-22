@@ -789,6 +789,41 @@ describe("multiscan", () => {
     expect(invalid.text()).toContain("expected number to be >0");
   });
 
+  test("includes warned repositories in the bulk CLI campaign summary without changing success status", async () => {
+    const paths = await fixture();
+    const source = await repository(paths.root, "cli-warning");
+    await writeFile(
+      paths.input,
+      `id,repository,revision\ncli-warning,${source.path},${source.revision}\n`,
+    );
+    const stdout = capture();
+    const stderr = capture();
+
+    expect(
+      await main(
+        ["bulk-scan", "repositories.csv", "--output-dir", "results", "--json"],
+        stdout.stream,
+        stderr.stream,
+        dependencies({
+          currentDirectory: paths.root,
+          onTurn: (_repository, options) => {
+            const warningOptions = options as {
+              onWarning?: (warning: string) => void;
+            };
+            warningOptions.onWarning?.("Repository changed during the scan.");
+          },
+        }),
+      ),
+    ).toBe(0);
+
+    expect(JSON.parse(stdout.text())).toMatchObject({
+      completed: 1,
+      incomplete: 0,
+      failed: 0,
+      warned: 1,
+    });
+  });
+
   test("surfaces optional post-scan warnings without failing completed scans", async () => {
     const paths = await fixture();
     const source = await repository(paths.root, "follow-up-warning");
@@ -812,7 +847,12 @@ describe("multiscan", () => {
       ),
     );
 
-    expect(summary).toMatchObject({ completed: 1, incomplete: 0, failed: 0 });
+    expect(summary).toMatchObject({
+      completed: 1,
+      incomplete: 0,
+      failed: 0,
+      warned: 1,
+    });
     expect(progress).toContainEqual({
       repository: "follow-up-warning",
       attempt: 1,
@@ -841,7 +881,12 @@ describe("multiscan", () => {
       ),
     );
 
-    expect(resumed).toMatchObject({ completed: 1, skipped: 1, failed: 0 });
+    expect(resumed).toMatchObject({
+      completed: 1,
+      skipped: 1,
+      failed: 0,
+      warned: 1,
+    });
     expect(resumedProgress).toEqual(
       expect.arrayContaining([
         {
